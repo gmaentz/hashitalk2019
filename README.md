@@ -1,4 +1,12 @@
-# hashitalk2019
+# Managing VMware Environments with HashiCorp Vault
+
+VMware is the virtualization standard within the corporate datacenter. An all too common practice is to use common passwords for the most privileged accounts within VMware environments. How many VM admins utilize the same root password for all of their ESXi servers? There has to be a better way.
+
+In this talk we will demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: Why you would want to use dynamic credentials within your VMware environment to reduce security risks. Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. How VMware Admins can utilize existing automation tools like vSphere API and PowerCLI with HashiCorp Vault.
+
+## vSphere API
+
+## PowerCLI
 
 1. Set the environment variables
 2. Install the random secret generator inside vault
