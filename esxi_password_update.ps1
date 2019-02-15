@@ -46,6 +46,24 @@ if($?) {
    Write-Output $SECUREPASS
 
    # PowerCLI command here to update the root password - TODO
+   # connect-viserver host1.lab.local -user root -password "ze!(^^D:02"
+   
+   Connect-VIServer $_.name -user root -password "ze!(^^D:02"
+   
+   get-vmhost | ForEach-Object {
+    try {
+      Connect-VIServer $_ -User root -Password $CurrentPassword 
+      Set-VMHostAccount -UserAccount root -Password $NewPassword
+    } catch {
+      throw $_
+    } finally {
+      Disconnect-VIServer -Confirm:$False -ea 0
+    }
+  }
+
+   $NewPassword = "VMware1!"
+   Set-VMHostAccount -UserAccount root -Password $NewPassword
+
    # Enhancement would be to query for ESXi Hostname $ESXIHOSTNAME
 
    if($?) {
