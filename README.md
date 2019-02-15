@@ -11,6 +11,8 @@ VMware officially supports the API and PowerCLI
 Below is a PowerCLI one-liner you can use to validate if all your root passwords are what you expect them to be.
 
 ```
+# Login into vCenter
+Connect-VIServer vc.lab.local
 $CurrentPassword = "VMware1!"
 get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPassword -EA 0; if (-not ($?)) {write-warning "Password failed for $($_.name)"  } else {Disconnect-VIServer $_.name -force -confirm:$false} }
 ```
@@ -18,15 +20,24 @@ get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPas
 
 ## Evoloving VMware Secrets Managment
 ### Manual - UI
+Add animated GIF here
 
 ### Manual - CLI
+```
 $CurrentPassword = "VMware1!"
-$NewPassword = "VMware1!"
+$NewPassword = "ZE!(^^d:02"
 Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 Set-VMHostAccount -UserAccount root -Password $NewPassword
-Disconnect-VIServer -Confirm:$False -ea -Out
+Disconnect-VIServer host1.lab.local -Confirm:$False
+```
+
+Then check if passwords changed
 
 ### Semi-Automated
+
+Loop through all the hosts
+
+
 
 ## vSphere API
 

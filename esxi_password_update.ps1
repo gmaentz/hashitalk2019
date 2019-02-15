@@ -57,12 +57,15 @@ if($?) {
     } catch {
       throw $_
     } finally {
-      Disconnect-VIServer -Confirm:$False -ea 0
+      Disconnect-VIServer -Confirm:$False -ea -Out
     }
   }
 
+# Set a Password
    $NewPassword = "VMware1!"
    Set-VMHostAccount -UserAccount root -Password $NewPassword
+
+# Loop Through Hosts
 
    # Enhancement would be to query for ESXi Hostname $ESXIHOSTNAME
 

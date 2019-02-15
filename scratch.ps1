@@ -11,12 +11,15 @@ get-vmhost | ForEach-Object {
   }
 
 
+# Login into vCenter
+Connect-VIServer vc.lab.local
+
+# Validate Current Password
 $CurrentPassword = "VMware1!"
 Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 
-$CurrentPassword = "ze!(^^D:02"
-Connect-VIServer host2.lab.local -User root -Password $CurrentPassword
-
+# Set New Password
+$NewPassword = "P@ssw0rd1"
 
 get-vmhost | ForEach-Object {
     try {
@@ -25,7 +28,7 @@ get-vmhost | ForEach-Object {
     } catch {
       throw $_
     } finally {
-      Disconnect-VIServer -Confirm:$False -ea -Out
+      Disconnect-VIServer -Confirm:$False
     }
   }
 
