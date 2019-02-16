@@ -60,10 +60,12 @@ vault kv put systemcreds/esxihosts/host1.lab.local password=NewP@ssword!
 vault kv put systemcreds/esxihosts/host2.lab.local password=NewP@ssword!
 vault kv put systemcreds/esxihosts/host3.lab.local password=NewP@ssword!
 
-Connect-VIServer vc.lab.local
-#Loop Through
 $oldpw = "SuperP@ssword"
 $newpw = "VMware1!"
+
+### Full Auto Script Here
+Connect-VIServer vc.lab.local
+#Loop Through Hosts 
 
 $hosts = @()
 
@@ -74,9 +76,22 @@ Disconnect-VIServer -confirm:$false
 $VAULT_ADDR='http://127.0.0.1:8200'
 $VAULT_TOKEN = 's.v7b1QkiKJNwAsvoWgI1qVTE4'
 
-#Connect to each ESXi host and change pw while logging password into Vault
-
+#Connect to Vault and read in old password
 foreach ($vmhost in $hosts) {
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+    write-host "Root password for $vmhost is $oldpw" 
+}
+
+#Connect to each ESXi host and change pw while logging password into Vault
+foreach ($vmhost in $hosts) {
+    #Read in current password from Vault
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+
+    #Random Password Generator
+    $newpw = [system.web.security.membership]::GeneratePassword(10,2)
+    
     write-host "Updating Vault for $vmhost..."
     $JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"password`": `"$newpw`" } }"
     Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Body $JSON -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost 
@@ -85,11 +100,31 @@ foreach ($vmhost in $hosts) {
     write-host "Changing root password on $vmhost..."
     Set-VMHostAccount -UserAccount root -password "$newpw"
     Disconnect-VIServer -confirm:$false
-   
 }
 
+#Connect to Vault and read in old password
+foreach ($vmhost in $hosts) {
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+    write-host "Root password for $vmhost is $oldpw" 
+}
+
+### Full Auto Script Ends Here
+
+$Password = [system.web.security.membership]::GeneratePassword(10,2)
+
+Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/host1.lab.local | ConvertTo-Json
+
+$jsondata = Get-Content -Raw -Path .\secrets.json | ConvertFrom-json
+$jsondata.data.data.password
 
 
+$jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/host1.lab.local
+$oldpw = $jsondata.data.data.password
 
-
-
+#Reading passwords from Vault
+foreach ($vmhost in $hosts) {
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+    write-host "Root password for $vmhost is $oldpw" 
+}

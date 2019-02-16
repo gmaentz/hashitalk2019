@@ -1,13 +1,3 @@
-path "systemcreds/data/vmware/*" {
+path "systemcreds/data/esxihosts/*" {
   capabilities = ["create", "update"]
-}
-
-# Allow hosts to generate new passphrases
-path "gen/passphrase" {
-  capabilities = ["update"]
-}
-
-# Allow hosts to generate new passwords
-path "gen/password" {
-  capabilities = ["update"]
 }
