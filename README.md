@@ -25,7 +25,7 @@ Add animated GIF here
 ### Manual - CLI
 ```
 $CurrentPassword = "VMware1!"
-$NewPassword = "ZE!(^^d:02"
+$NewPassword = "NewP@ssw0rd"
 Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 Set-VMHostAccount -UserAccount root -Password $NewPassword
 Disconnect-VIServer host1.lab.local -Confirm:$False
