@@ -20,7 +20,9 @@ get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPas
 
 ## Evoloving VMware Secrets Managment
 ### Manual - UI
-Add animated GIF here
+Changing an ESXi root password manually via the VMware Web interface.
+
+![Manual - Web Interfaces](images/vault_packer_build.gif)
 
 ### Manual - CLI
 ```
