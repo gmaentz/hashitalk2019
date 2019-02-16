@@ -1,0 +1,95 @@
+Connect-VIServer vc.lab.local
+
+$CurrentPassword = "VMware1!"
+get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPassword -EA 0; if (-not ($?)) {write-warning "Password failed for $($_.name)"  } else {write-warning "Password valid for $($_.name) Disconnect-VIServer $_.name -force -confirm:$false}
+
+#No Errors - Check Host
+
+#Change Password Through UI
+
+$CurrentPassword = "VMware1!"
+$NewPassword = "NewP@ssw0rd"
+Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
+Set-VMHostAccount -UserAccount root -Password $NewPassword
+Disconnect-VIServer host1.lab.local -Confirm:$False
+
+$CurrentPassword = "VMware1!"
+$NewPassword = "NewP@ssw0rd"
+Connect-VIServer host2.lab.local -User root -Password $CurrentPassword
+Set-VMHostAccount -UserAccount root -Password $NewPassword
+Disconnect-VIServer host2.lab.local -Confirm:$False
+
+$CurrentPassword = "VMware1!"
+$NewPassword = "NewP@ssw0rd"
+Connect-VIServer host3.lab.local -User root -Password $CurrentPassword
+Set-VMHostAccount -UserAccount root -Password $NewPassword
+Disconnect-VIServer host3.lab.local -Confirm:$False
+
+# Getting Vault involved
+$env:VAULT_ADDR="http://127.0.0.1:8200"
+set VAULT_ADDR=http://127.0.0.1:8200
+
+#Create VMadmin Policy
+# Allows admins to read passwords.
+
+path "systemcreds/*" {
+  capabilities = ["list"]
+}
+path "systemcreds/data/esxihosts/*" {
+#  capabilities = ["list", "read"]
+   capabilities = ["create", "update", "list", "read", "delete"]
+  }
+path "systemcreds/metadata/esxihosts/*" {
+#  capabilities = ["list", "read"]
+   capabilities = ["create", "update", "list", "read", "delete"]
+  }
+
+#Enable UserName Password Authentication
+vault write auth/userpass/users/vmadmin \
+    password=VMware1! \
+    policies=vmadmins
+
+#Create KV engine
+
+#Store Passwords in Vault
+#Single Password
+vault kv put systemcreds/esxihosts rootpassword=NewP@ssword!
+
+#Password per Host
+vault kv put systemcreds/esxihosts/host1.lab.local password=NewP@ssword!
+vault kv put systemcreds/esxihosts/host2.lab.local password=NewP@ssword!
+vault kv put systemcreds/esxihosts/host3.lab.local password=NewP@ssword!
+
+Connect-VIServer vc.lab.local
+#Loop Through
+$oldpw = "SuperP@ssword"
+$newpw = "VMware1!"
+
+$hosts = @()
+
+Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
+
+Disconnect-VIServer -confirm:$false
+
+$VAULT_ADDR='http://127.0.0.1:8200'
+$VAULT_TOKEN = 's.v7b1QkiKJNwAsvoWgI1qVTE4'
+
+#Connect to each ESXi host and change pw while logging password into Vault
+
+foreach ($vmhost in $hosts) {
+    write-host "Updating Vault for $vmhost..."
+    $JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"password`": `"$newpw`" } }"
+    Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Body $JSON -Uri ${VAULT_ADDR}/v1/systemcreds/data/esxihosts/$vmhost 
+    write-host "Connecting to $vmhost..."
+    Connect-VIserver -server $vmhost -user root -password "$oldpw"
+    write-host "Changing root password on $vmhost..."
+    Set-VMHostAccount -UserAccount root -password "$newpw"
+    Disconnect-VIServer -confirm:$false
+   
+}
+
+
+
+
+
+
