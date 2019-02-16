@@ -1,17 +1,60 @@
-# Script for rotating passwords on ESXi accounts.
-# Make sure and set VAULT_TOKEN and VAULT_ADDR as environment variables.
-# You may run this script as a scheduled task for regular rotation.
+# Script for rotating root passwords on ESXi accounts.
+# Pass the VAULT_TOKEN, VAULT_ADDR and VCENTER_ADDR as parameters.
 
-# Still need to implement TLS
-# Use TLS
-# [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+param (
+    [Parameter(Mandatory=$true)][string]$vcenter,
+    [Parameter(Mandatory=$true)][string]$vaultserver,
+    [Parameter(Mandatory=$true)][string]$vaulttoken
+ )
 
-# Import some environment variables.
-# $VAULT_ADDR = $env:VAULT_ADDR
-$VAULT_ADDR='http://127.0.0.1:8200'
-$VAULT_TOKEN = 's.13316a99AQHsXVlpJyPO9oI6'
-#$VAULT_TOKEN = $env:VAULT_TOKEN
-$ESXIHOSTNAME = "esxihost20"
+ write-output "VCenter Server: $vcenter"
+ write-output "Vault Server: $vaultserver"
+ write-output "Vault Token: $vaulttoken"
+
+# Connect to vCenter or ESXi Host and enumerate hosts to be updated
+Connect-VIServer $vcenter
+$hosts = @()
+Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
+Disconnect-VIServer -confirm:$false
+
+# How many versions to keep
+# $JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"$USERNAME`": `"$NEWPASS`" } }
+
+#Connect to Vault and read in old password
+foreach ($vmhost in $hosts) {
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+    write-host "Root password for $vmhost is $oldpw" 
+}
+
+#Connect to each ESXi host and change pw while logging password into Vault
+foreach ($vmhost in $hosts) {
+    # Read in current password from Vault
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+
+    # Random Password Generator
+    $newpw = [system.web.security.membership]::GeneratePassword(10,2)
+
+    # First commit the new password to vault, then change it on the ESXi Server
+    write-host "Updating Vault for $vmhost..."
+    $JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"password`": `"$newpw`" } }"
+    Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Method POST -Body $JSON -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost 
+    write-host "Connecting to $vmhost..."
+    Connect-VIserver -server $vmhost -user root -password "$oldpw"
+    write-host "Changing root password on $vmhost..."
+    Set-VMHostAccount -UserAccount root -password "$newpw"
+    Disconnect-VIServer -confirm:$false
+}
+
+#Connect to Vault and read in old password
+foreach ($vmhost in $hosts) {
+    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaultserver} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
+    $oldpw = $jsondata.data.data.password
+    write-host "Root password for $vmhost is $oldpw" 
+}
+
+### Full Auto Script Ends Here
 
 # Renew our token before we do anything else.
 # Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Uri ${VAULT_ADDR}/v1/auth/token/renew-self
@@ -20,62 +63,40 @@ $ESXIHOSTNAME = "esxihost20"
 #    Write-Output "Error renewing Vault token lease."
 # }
 
-# Fetch a new passphrase from Vault. Adjust the options to fit your requirements.
-#$NEWPASS = (Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Body "{`"words`":`"4`",`"separator`":`"-`"}" -Uri ${VAULT_ADDR}/v1/gen/passphrase).data.value
-
-# Generate a Random password - still need to implement this plugin or order to work
-# Fetch a new password from Vault. Adjust the options to fit your requirements.
-# $NEWPASS = (Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Body "{`"length`":`"36`",`"symbols`":`"0`"}" -Uri ${VAULT_ADDR}/v1/gen/password).data.value
-
-$USERNAME = "root"
-$NEWPASS = "NewP@ssw0rd1"
-
 # Convert into a SecureString
-$SECUREPASS = ConvertTo-SecureString $NEWPASS -AsPlainText -Force
+# $SECUREPASS = ConvertTo-SecureString $NEWPASS -AsPlainText -Force
 
-# Create the JSON payload to write to Vault's K/V store. 
-# Keep the last 10 versions of this credential.
-$JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"$USERNAME`": `"$NEWPASS`" } }"
+# Try Catch
+# if($?) {
+#    Write-Output "Vault updated with new password for $ESXIHOSTNAME"
+#    Write-Output $USERNAME
+#    Write-Output $SECUREPASS
 
-# First commit the new password to vault, then change it locally.
-Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Body $JSON -Uri ${VAULT_ADDR}/v1/systemcreds/data/vmware/${ESXIHOSTNAME}/${USERNAME}_creds
-
-if($?) {
-   Write-Output "Vault updated with new password for $ESXIHOSTNAME"
-   Write-Output $USERNAME
-   Write-Output $SECUREPASS
-
-   # PowerCLI command here to update the root password - TODO
-   # connect-viserver host1.lab.local -user root -password "ze!(^^D:02"
+#    # PowerCLI command here to update the root password - TODO
+#    # connect-viserver host1.lab.local -user root -password "ze!(^^D:02"
    
-   Connect-VIServer $_.name -user root -password "ze!(^^D:02"
+#    Connect-VIServer $_.name -user root -password "ze!(^^D:02"
    
-   get-vmhost | ForEach-Object {
-    try {
-      Connect-VIServer $_ -User root -Password $CurrentPassword 
-      Set-VMHostAccount -UserAccount root -Password $NewPassword
-    } catch {
-      throw $_
-    } finally {
-      Disconnect-VIServer -Confirm:$False -ea -Out
-    }
-  }
+#    get-vmhost | ForEach-Object {
+#     try {
+#       Connect-VIServer $_ -User root -Password $CurrentPassword 
+#       Set-VMHostAccount -UserAccount root -Password $NewPassword
+#     } catch {
+#       throw $_
+#     } finally {
+#       Disconnect-VIServer -Confirm:$False -ea -Out
+#     }
+#   }
 
-# Set a Password
-   $NewPassword = "VMware1!"
-   Set-VMHostAccount -UserAccount root -Password $NewPassword
+# # Loop Through Hosts
 
-# Loop Through Hosts
-
-   # Enhancement would be to query for ESXi Hostname $ESXIHOSTNAME
-
-   if($?) {
-       Write-Output "${USERNAME}'s password was stored in Vault and updated on the ESXi host - $ESXIHOSTNAME"
-   }
-   else {
-       Write-Output "Error: ${USERNAME}'s password was stored in Vault but *not* on the ESXi host - $ESXIHOSTNAME"
-   }
-}
-else {
-    Write-Output "Error saving new password to Vault. ESXi password will remain unchanged."
-}
+#    if($?) {
+#        Write-Output "${USERNAME}'s password was stored in Vault and updated on the ESXi host - $ESXIHOSTNAME"
+#    }
+#    else {
+#        Write-Output "Error: ${USERNAME}'s password was stored in Vault but *not* on the ESXi host - $ESXIHOSTNAME"
+#    }
+# }
+# else {
+#     Write-Output "Error saving new password to Vault. ESXi password will remain unchanged."
+# }
