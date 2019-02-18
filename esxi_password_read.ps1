@@ -21,11 +21,10 @@ Disconnect-VIServer -confirm:$false
 foreach ($vmhost in $hosts) {
     $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
     if($?) {
-        Write-Output "Password is stored within Vault."
         $currentpw = $jsondata.data.data.password
         write-host "Root password for $vmhost is $currentpw"
      }
      else {
-         Write-Output "Error reading password from Vault."
+         Write-Output "Error reading password from Vault. Be sure the $vmhost is defined under the Vault path: /systemcreds/esxihosts"
      }
 }
