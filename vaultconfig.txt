@@ -1,0 +1,21 @@
+## VMadmins Policy
+vault write vmadmin.hcl policy - Need the syntax here
+
+## Enable LDAP
+vault auth enable ldap
+vault write auth/ldap/config \
+    url="ldap://lab.local" \
+    userdn="cn=Users,dc=lab,dc=local" \
+    groupdn="ou=Users,dc=lab,dc=local" \
+    groupfilter="(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))" \
+    groupattr="cn" \
+    upndomain="lab.local"
+
+vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
+
+
+## Setup systemcreds secrets engine
+vault kv put systemcreds/esxihosts rootpassword=NewP@ssword!
+
+## Powershell to automate
+.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver http://vault.lab.local:8200 -vaulttoken s.UfHbzAcmo4FMEEFIx5QNwTjG

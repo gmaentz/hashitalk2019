@@ -5,18 +5,7 @@ There has to be a better way.
 
 In this talk we will demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: Why you would want to use dynamic credentials within your VMware environment to reduce security risks. Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. How VMware Admins can utilize existing automation tools like vSphere API and PowerCLI with HashiCorp Vault.
 
-VMware officially supports the API and PowerCLI
-
-### Discovering Passwords for ESXi Servers
-Below is a PowerCLI one-liner you can use to validate if all your root passwords are what you expect them to be.
-
-```
-# Login into vCenter
-Connect-VIServer vc.lab.local
-$CurrentPassword = "VMware1!"
-get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPassword -EA 0; if (-not ($?)) {write-warning "Password failed for $($_.name)"  } else {Disconnect-VIServer $_.name -force -confirm:$false} }
-```
-
+VMware officially supports the Web Interface, PowerCLI and their API.
 
 ## Evoloving VMware Secrets Managment
 ### Manual - UI
@@ -24,7 +13,7 @@ Changing an ESXi root password manually via the VMware Web interface.
 
 ![Manual - Web Interfaces](images/vault_packer_build.gif)
 
-### Manual - CLI
+### Manual - PowerCLI
 ```
 $CurrentPassword = "VMware1!"
 $NewPassword = "NewP@ssw0rd"
@@ -33,16 +22,25 @@ Set-VMHostAccount -UserAccount root -Password $NewPassword
 Disconnect-VIServer host1.lab.local -Confirm:$False
 ```
 
-Then check if passwords changed
+### Semi-Automated - PowerCLI / Host Profiles
 
-### Semi-Automated
+Loop through all the host
+```
+$CurrentPassword = "VMware1!"
+$NewPassword = "NewP@ssw0rd"
+Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
+Set-VMHostAccount -UserAccount root -Password $NewPassword
+Disconnect-VIServer host1.lab.local -Confirm:$False
+```
 
-Loop through all the hosts
+![Semi-Automated - Host Profiles (VMware Enterprise+ customers only)](images/vault_packer_build.gif)
+
+
+## Automated - PowerCLI and HashiCorp Vault
 
 
 
-## vSphere API
-
+## API
 Show the vSphere REST API
 https://your_vcenter.server.com/apiexplorer
 
@@ -64,6 +62,8 @@ Set the environment variables
 2. Install the random secret generator inside vault
 3. Create the data path in vault for ESXi Servers
 
+
+## Vault Setup
 ### Step 1: Configure Policies
 vault policy write rotate-esxi policies/rotate-esxi.hcl
 
@@ -99,30 +99,39 @@ vault kv get -field=password  systemcreds/esxihosts/esxihost01
 
 vault kv put systemcreds/esxihosts/esxihost01 password=NewP@ssword!
 
+### Discovering Passwords for ESXi Servers
+Below is a PowerCLI one-liner you can use to validate if all your root passwords are what you expect them to be.
+
+```
+# Login into vCenter
+Connect-VIServer vc.lab.local
+$CurrentPassword = "VMware1!"
+get-vmhost | %{$null = connect-viserver $_.name -user root -password $CurrentPassword -EA 0; if (-not ($?)) {write-warning "Password failed for $($_.name)"  } else {Disconnect-VIServer $_.name -force -confirm:$false} }
+```
+
 # API
 ## Create the KV store
+```
 curl \
     --header "X-Vault-Token: s.13316a99AQHsXVlpJyPO9oI6" \
     --request POST \
     --data @payload.json \
     http://127.0.0.1:8200/v1/secret/config
+```
 
 ## Create a secret in the KV store
-
+```
 curl \
     --header "X-Vault-Token: s.13316a99AQHsXVlpJyPO9oI6" \
     --request POST \
     --data @payload2.json \
-    http://127.0.0.1:8200/v1/secret/data/esxihosts/esxihost01 | jq
-
+    http://127.0.0.1:8200/v1/systemcreds/data/esxihosts/host1.lab.local | jq
+```
 
 
 ## Read from the KV store
+```
 curl \
     --header "X-Vault-Token: s.13316a99AQHsXVlpJyPO9oI6" \
-    http://127.0.0.1:8200/v1/secret/config
-
-
-curl \
-    --header "X-Vault-Token: s.13316a99AQHsXVlpJyPO9oI6" \
-    http://127.0.0.1:8200/v1/systemcreds/esxihosts/esxihost01/password
+    http://127.0.0.1:8200/v1/systemcreds/esxihosts/host1.lab.local/password
+```

@@ -47,14 +47,6 @@ foreach ($vmhost in $hosts) {
     Disconnect-VIServer -confirm:$false
 }
 
-#Connect to Vault and read in old password
-foreach ($vmhost in $hosts) {
-    $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaultserver} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
-    $oldpw = $jsondata.data.data.password
-    write-host "Root password for $vmhost is $oldpw" 
-}
-
-### Full Auto Script Ends Here
 
 # Renew our token before we do anything else.
 # Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Uri ${VAULT_ADDR}/v1/auth/token/renew-self
