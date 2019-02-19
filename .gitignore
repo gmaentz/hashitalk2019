@@ -1,5 +1,6 @@
 # MP4 Files
 *.MP4
+*.mp4
 
 # Open Doc Files
 ~$.*
