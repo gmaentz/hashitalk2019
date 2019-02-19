@@ -25,6 +25,6 @@ foreach ($vmhost in $hosts) {
         write-host "Root password for $vmhost is $currentpw"
      }
      else {
-         Write-Output "Error reading password from Vault. Be sure $vmhost is defined under the Vault path: /systemcreds/esxihosts/"
+         Write-Output "Error reading password from Vault. Be sure a password is saved under the Vault path: /systemcreds/esxihosts/$vmhost"
      }
 }
