@@ -7,44 +7,7 @@ In this talk we will showcase the evolution of managing VMware credentials.  The
 
 * How to use dynamic credentials within your VMware environment.
 * How VMware Admins can utilize existing tools like PowerCLI with HashiCorp Vault. 
-* Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. 
-
-***
-
-## Evolving VMware Secrets Managment
-***
-### Manual password updates with Web Interface and/or PowerCLI
-![Manual - Web Interfaces](images/manual.gif)
-
-#### PowerCLI
-Changing an ESXi root password manually via PowerCLI.
-```powershell
-$CurrentPassword = "VMware1!"
-$NewPassword = "NewP@ssw0rd"
-Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
-Set-VMHostAccount -UserAccount root -Password $NewPassword
-Disconnect-VIServer host1.lab.local -Confirm:$False
-```
-***
-
-### Host Profiles
-
-Changing an ESXi root password manually via the VMware Web interface using Host Profiles.
-
-![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
-
-*Note: Host Profiles are currently available to VMware Enterprise Plus customers only*
-
-***
-
-### Batch password update across ESXi hosts using PowerCLI
-Changing the ESXi root password of all hosts via PowerCLI.
-
-Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
-
-![Batch Update - PowerCLI](images/batch_update.gif)
-
-***
+* Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner.
 
 ## PowerCLI and HashiCorp Vault
 
@@ -116,3 +79,42 @@ Example:
 .\esxi_password_read.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
 ```
 ![Automated - Read and Update Vault](images/read_vault.gif)
+
+
+##Manual and Semi-Automated Alternatives:
+Below are some of the manual and partially automated options for rotating ESXi root passwords:
+
+### Manual password updates with Web Interface and/or PowerCLI
+![Manual - Web Interfaces](images/manual.gif)
+
+#### PowerCLI
+Changing an ESXi root password manually via PowerCLI.
+```powershell
+$CurrentPassword = "VMware1!"
+$NewPassword = "NewP@ssw0rd"
+Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
+Set-VMHostAccount -UserAccount root -Password $NewPassword
+Disconnect-VIServer host1.lab.local -Confirm:$False
+```
+***
+
+### Host Profiles
+
+Changing an ESXi root password manually using Host Profiles.
+
+![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
+
+*Note: Host Profiles are currently licesened to VMware Enterprise Plus customers only *
+
+***
+
+### Batch password update across ESXi hosts using PowerCLI
+Changing the ESXi root password of all hosts via PowerCLI.
+
+Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
+
+![Batch Update - PowerCLI](images/batch_update.gif)
+
+***
+
+
