@@ -29,7 +29,7 @@ Loop through all the hosts
 ### Batch Update - PowerCLI
 Changing the ESXi root password of all hosts via PowerCLI.
 
-Utilize this [PowerCLI Script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
+Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
 
 ![Batch Update - PowerCLI](images/batch_update.gif)
 
@@ -40,35 +40,54 @@ Automated PowerCLI, REST API to rotate passwords, unique password for all hosts,
 * HashiCorp Vault cluster that is reachable from your server instances. (Inbound TCP port 8200 to Vault)
 
 ### Step 1: Configure Policies
-* Create a vmadmins policy
-* Upload the vmadmins.hcl into the ACL policies with the Vault UI
+Create a vmadmins policy and upload the [vmadmins.hcl](policies/vmadmins.hcl) into the ACL policies within the Vault UI
 
+Alternatively this can be done via the Vault CLI
 ```
 vault policy write vmadmins policies/vmadmins.hcl
 ```
 ### Step 2: Associate the vmadmins policy with the LDAP Group or user pass
-LDAP Authentication
+Associate the VMware Admins Active Directory group with the Vault vmadmins policy.
 ```
 vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
 ```
-User Name Password Authentication
+If you are not using LDAP authentication withn Vault you can us an alternative authentication method.  Below is an example associating username password authentication to the Vault vmadmins policy
 ```
 vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
 ```
-### Step 3: Login as the User and Generate a Token
+### Step 3: Enable the KV secrets engine and store ESXi passwords per host
+A version 2 K/V secrets backend mounted at `systemcreds`
+Passwords are stored under the Vault path: /systemcreds/esxihosts/$vmhost
+
+Ex.
+![ESXi passwords stored in Vault](images/esxi_vault.gif)
+
+### Step 4: Login as the User and Generate a Token
+Login to the UI copy the token.
+![Copy Vault Token](images/copy_token.jpg)
+
+Alternatively this can be done via the Vault CLI
 ```
 vault token create -period 24h -policy vmadmins
 ```
-### Step 4: Enable the KV secrets engine
-A version 2 K/V secrets backend mounted at `systemcreds`
 
-### Step 5: Run the script
+### Step 5: Run the update password script
+Utilize [esxi_password_update.ps1 PowerCLI script](powershell/esxi_password_update.ps1) to read the existing root password from Vault, connect to vCenter, loop through all hosts connected with vCenter, generate a random password and set it for each host, and record the new password with Vault - keeping a versioned history.
+
 ```
 powershell  .\esxi_password_update.ps1 -vcenter {vcenter} -vaultserver {vault server -vaulttoken {vaulttoken}
 ```
 Example:
 ```
-.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -vaulttoken
+.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
 ```
-![Automated - Read and Update Vault](images/read_update_vault.gif)
+![Automated - Rotate ESXi Host Passwords and Update Vault](images/update_vault.gif)
 
+### Optional: Run the read password script to list root passwords stored in Vault
+Utilize [esxi_password_read.ps1 PowerCLI script](powershell/esxi_password_read.ps1) to read the existing root password for all hosts in Vault.
+
+Example:
+```
+.\esxi_password_read.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
+```
+![Automated - Read and Update Vault](images/read_vault.gif)
