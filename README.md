@@ -3,40 +3,54 @@
 VMware is the virtualization standard within the corporate datacenter. An all too common practice is to use common passwords for the most privileged accounts within VMware environments. How many VM admins utilize the same root password for all of their ESXi servers? When was the last time your root password for ESXi servers was changed?
 There has to be a better way.
 
-In this talk we will showcase the evolution of managing VMware credentials and demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: Why you would want to use dynamic credentials within your VMware environment to reduce security risks. Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. How VMware Admins can utilize existing tools like PowerCLI with HashiCorp Vault.
+In this talk we will showcase the evolution of managing VMware credentials.  The goal will be to demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: 
 
-![Managing VMware Environments with HashiCorp Vault](images/vault_pluggable_architecture.jpg)
+* How to use dynamic credentials within your VMware environment.
+* How VMware Admins can utilize existing tools like PowerCLI with HashiCorp Vault. 
+* Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. 
 
+***
 
 ## Evolving VMware Secrets Managment
-### Manual - UI
-Changing an ESXi root password manually via the VMware Web interface.
+***
+### Manual password updates with Web Interface and/or PowerCLI
+![Manual - Web Interfaces](images/manual.gif)
 
-### Manual - PowerCLI
+#### PowerCLI
 Changing an ESXi root password manually via PowerCLI.
-```
+```powershell
 $CurrentPassword = "VMware1!"
 $NewPassword = "NewP@ssw0rd"
 Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 Set-VMHostAccount -UserAccount root -Password $NewPassword
 Disconnect-VIServer host1.lab.local -Confirm:$False
 ```
-![Manual - Web Interfaces](images/manual.gif)
+***
 
-### Semi-Automated - Host Profiles / PowerCLI
-### Host Profiles - UI
-Changing an ESXi root password manually via the VMware Web interface.
-Loop through all the hosts
+### Host Profiles
+
+Changing an ESXi root password manually via the VMware Web interface using Host Profiles.
+
 ![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
 
-### Batch Update - PowerCLI
+*Note: Host Profiles are currently available to VMware Enterprise Plus customers only*
+
+***
+
+### Batch password update across ESXi hosts using PowerCLI
 Changing the ESXi root password of all hosts via PowerCLI.
 
 Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
 
 ![Batch Update - PowerCLI](images/batch_update.gif)
 
-## Automated - PowerCLI and HashiCorp Vault
+***
+
+## PowerCLI and HashiCorp Vault
+
+![Managing VMware Environments with HashiCorp Vault](images/vault_pluggable_architecture.jpg)
+
+
 * Discovery of ESXi hosts using PowerCLI
 * Pull root password for each ESXi host using Vault REST API
 * Generate unique passwords per host and update Vault
@@ -80,23 +94,25 @@ Alternatively this can be done via the Vault CLI
 vault token create -period 24h -policy vmadmins
 ```
 
-### Step 5: Run the update password script
-Utilize [esxi_password_update.ps1 PowerCLI script](powershell/esxi_password_update.ps1) to read the existing root password from Vault, connect to vCenter, loop through all hosts connected with vCenter, generate a random password and set it for each host, and record the new password with Vault - keeping a versioned history.
+### Step 5: Update ESXi passwords using PowerCLI and Vault
+Utilize [esxi_password_update.ps1](powershell/esxi_password_update.ps1) to read the existing root password from Vault, connect to vCenter, loop through all hosts connected with vCenter, generate a random password and set it for each host, and record the new password with Vault - keeping a versioned history.
 
-```
-powershell  .\esxi_password_update.ps1 -vcenter {vcenter} -vaultserver {vault server -vaulttoken {vaulttoken}
+```powershell
+.\esxi_password_update.ps1 -vcenter {vcenter} -vaultserver {vault server -vaulttoken {vaulttoken}
 ```
 Example:
-```
+```powershell
 .\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
 ```
 ![Automated - Rotate ESXi Host Passwords and Update Vault](images/update_vault.gif)
+
+***
 
 ### Optional: Run the read password script to list root passwords stored in Vault
 Utilize [esxi_password_read.ps1 PowerCLI script](powershell/esxi_password_read.ps1) to read the existing root password for all hosts in Vault.
 
 Example:
-```
+```powershell
 .\esxi_password_read.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
 ```
 ![Automated - Read and Update Vault](images/read_vault.gif)
