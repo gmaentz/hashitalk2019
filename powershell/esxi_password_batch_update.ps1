@@ -9,6 +9,9 @@ param (
 
 write-output "VCenter Server: $vcenter"
 
+# Connect to vCenter or ESXi Host and enumerate hosts to be updated
+Connect-VIServer $vcenter
+
 $hosts = @()
 Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
 Disconnect-VIServer -confirm:$false

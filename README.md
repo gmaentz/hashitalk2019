@@ -11,9 +11,8 @@ VMware officially supports the Web Interface, PowerCLI and vSphere API.
 ### Manual - UI
 Changing an ESXi root password manually via the VMware Web interface.
 
-![Manual - Web Interfaces](images/vault_packer_build.gif)
-
 ### Manual - PowerCLI
+Changing an ESXi root password manually via PowerCLI.
 ```
 $CurrentPassword = "VMware1!"
 $NewPassword = "NewP@ssw0rd"
@@ -21,26 +20,48 @@ Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 Set-VMHostAccount -UserAccount root -Password $NewPassword
 Disconnect-VIServer host1.lab.local -Confirm:$False
 ```
+![Manual - Web Interfaces](images/manual.gif)
 
-### Semi-Automated - PowerCLI / Host Profiles
+### Semi-Automated - Host Profiles / PowerCLI
+### Host Profiles - UI
+Changing an ESXi root password manually via the VMware Web interface.
 Loop through all the hosts
 ![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
-
+### Mass Update - PowerCLI
+Changing the ESXi root password of all hosts via PowerCLI.
 esxi_password_batch_update.ps1
-![Batch Update - PowerCLI](images/vault_packer_build.gif)
 
+![Batch Update - PowerCLI](images/batch_update.gif)
 
 ## Automated - PowerCLI and HashiCorp Vault
-## Vault Setup
+Automated PowerCLI, REST API to rotate passwords, unique password for all hosts, changed dynamically and still allows for manual revoke and updates
+
+## Prerequisites / Vault Setup
+* HashiCorp Vault cluster that is reachable from your server instances. (Inbound TCP port 8200 to Vault)
+
 ### Step 1: Configure Policies
-vault policy write rotate-esxi policies/rotate-esxi.hcl
+* Create a vmadmins policy
+* Upload the vmadmins.hcl into the ACL policies with the Vault UI
 
-### Step 2: Generate a Token
-vault token create -period 24h -policy rotate-esxi
+```vault policy write vmadmins policies/vmadmins.hcl
+```
+### Step 2: Associate the vmadmins policy with the LDAP Group or user pass
+LDAP Authentication
+```vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
+```
+User Name Password Authentication
+```vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
+```
+### Step 3: Login as the User and Generate a Token
 
-### Step 3: Run the script
+vault token create -period 24h -policy vmadmins
+
+### Step 4: Enable the KV secrets engine
+A version 2 K/V secrets backend mounted at `systemcreds`
+
+### Step 5: Run the script
 ```powershell  .\esxi_password_update.ps1
-   -vcenter vc.lab.local 
+   -vcenter
    -vaultserver
    -token
 ```
@@ -49,4 +70,3 @@ Example:
 ```
 ![Automated - Read and Update Vault](images/read_update_vault.gif)
 
-Automated PowerCLI, REST API to rotate passwords, unique password for all hosts, changed dynamically and still allows for manual revoke and updates
