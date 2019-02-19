@@ -5,7 +5,7 @@ There has to be a better way.
 
 In this talk we will showcase the evolution of managing VMware credentials and demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: Why you would want to use dynamic credentials within your VMware environment to reduce security risks. Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. How VMware Admins can utilize existing tools like PowerCLI with HashiCorp Vault.
 
-## Evoloving VMware Secrets Managment
+## Evolving VMware Secrets Managment
 ### Manual - UI
 Changing an ESXi root password manually via the VMware Web interface.
 
@@ -27,7 +27,7 @@ Loop through all the hosts
 ![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
 ### Mass Update - PowerCLI
 Changing the ESXi root password of all hosts via PowerCLI.
-esxi_password_batch_update.ps1
+[PowerCLI Script](powershell/esxi_password_batch_update.ps1)
 
 ![Batch Update - PowerCLI](images/batch_update.gif)
 

@@ -3,6 +3,8 @@
 
 param (
     [Parameter(Mandatory=$true)][string]$vcenter,
+    [Parameter][string]$vcenteradmin,
+    [Parameter][string]$vcenterpw,
     [Parameter(Mandatory=$true)][string]$vaultserver,
     [Parameter(Mandatory=$true)][string]$vaulttoken
  )
@@ -13,6 +15,9 @@ param (
 
 # Connect to vCenter or ESXi Host and enumerate hosts to be updated
 Connect-VIServer $vcenter
+# Grab vSphere credentials from Vault
+# Connect-VIServer -Server 10.23.112.235 -Protocol https -User Administrator -Password $vcenterpwd
+
 $hosts = @()
 Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
 Disconnect-VIServer -confirm:$false
