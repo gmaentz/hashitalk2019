@@ -13,6 +13,8 @@ vault write auth/ldap/config \
 
 vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
 
+# Enable Audting
+vault audit enable file file_path=vault_audit.log
 
 ## Setup systemcreds secrets engine
 vault kv put systemcreds/esxihosts rootpassword=NewP@ssword!
