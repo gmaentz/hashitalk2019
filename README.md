@@ -5,7 +5,7 @@ There has to be a better way.
 
 In this talk we will demonstrate how HashiCorp Vault can be used to help VMware Admins move to short-lived, dynamic credentials within ESXi and vSphere environments. Join us to learn: Why you would want to use dynamic credentials within your VMware environment to reduce security risks. Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner. How VMware Admins can utilize existing automation tools like vSphere API and PowerCLI with HashiCorp Vault.
 
-VMware officially supports the Web Interface, PowerCLI and their API.
+VMware officially supports the Web Interface, PowerCLI and vSphere API.
 
 ## Evoloving VMware Secrets Managment
 ### Manual - UI
@@ -24,20 +24,26 @@ Disconnect-VIServer host1.lab.local -Confirm:$False
 
 ### Semi-Automated - PowerCLI / Host Profiles
 
-Loop through all the host
+Loop through all the hosts
 ```
+
 $CurrentPassword = "VMware1!"
 $NewPassword = "NewP@ssw0rd"
+Connect-VIServer $vcenter
+$hosts = @()
+Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
+
+Disconnect-VIServer -confirm:$false
 Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
 Set-VMHostAccount -UserAccount root -Password $NewPassword
 Disconnect-VIServer host1.lab.local -Confirm:$False
+
 ```
 
 ![Semi-Automated - Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
 
 ## Automated - PowerCLI and HashiCorp Vault
 ![Semi-Automated - Read and Update Vault](images/read_update_vault.gif)
-
 
 ## Vault Setup
 ### Step 1: Configure Policies

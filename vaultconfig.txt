@@ -1,3 +1,8 @@
+
+$env:VAULT_ADDR="https://127.0.0.1:8200
+$env:export VAULT_CLIENT_CERT=c:/temp/vault.crt
+$env:export VAULT_CLIENT_KEY=c:/temp/vault.key
+
 ## VMadmins Policy
 vault write vmadmin.hcl policy - Need the syntax here
 

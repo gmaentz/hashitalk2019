@@ -1,4 +1,6 @@
-#Connect to each ESXi host and set uniform password
+# Connect to each ESXi host and set uniform password
+# Password is not stored in any secure location
+
 param (
     [Parameter(Mandatory=$true)][string]$vcenter,
     [Parameter(Mandatory=$true)][string]$currentpwd,
