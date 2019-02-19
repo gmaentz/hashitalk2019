@@ -23,36 +23,30 @@ Disconnect-VIServer host1.lab.local -Confirm:$False
 ```
 
 ### Semi-Automated - PowerCLI / Host Profiles
-
 Loop through all the hosts
-```
+![Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
 
-$CurrentPassword = "VMware1!"
-$NewPassword = "NewP@ssw0rd"
-Connect-VIServer $vcenter
-$hosts = @()
-Get-VMHost | sort | Get-View | Where {$_.Summary.Config.Product.Name -match "i"} | % { $hosts+= $_.Name }
+esxi_password_batch_update.ps1
+![Batch Update - PowerCLI](images/vault_packer_build.gif)
 
-Disconnect-VIServer -confirm:$false
-Connect-VIServer host1.lab.local -User root -Password $CurrentPassword
-Set-VMHostAccount -UserAccount root -Password $NewPassword
-Disconnect-VIServer host1.lab.local -Confirm:$False
-
-```
-
-![Semi-Automated - Host Profiles (VMware Enterprise+ customers only)](images/host_profiles.gif)
 
 ## Automated - PowerCLI and HashiCorp Vault
-![Semi-Automated - Read and Update Vault](images/read_update_vault.gif)
-
 ## Vault Setup
 ### Step 1: Configure Policies
 vault policy write rotate-esxi policies/rotate-esxi.hcl
 
-### Step 2: Generate a Token for each ESXi Server
+### Step 2: Generate a Token
 vault token create -period 24h -policy rotate-esxi
 
 ### Step 3: Run the script
-```powershell
-.\esxi_password_update.ps1 root
+```powershell  .\esxi_password_update.ps1
+   -vcenter vc.lab.local 
+   -vaultserver
+   -token
 ```
+Example:
+```.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -token
+```
+![Automated - Read and Update Vault](images/read_update_vault.gif)
+
+Automated PowerCLI, REST API to rotate passwords, unique password for all hosts, changed dynamically and still allows for manual revoke and updates
