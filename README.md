@@ -43,30 +43,32 @@ Automated PowerCLI, REST API to rotate passwords, unique password for all hosts,
 * Create a vmadmins policy
 * Upload the vmadmins.hcl into the ACL policies with the Vault UI
 
-```vault policy write vmadmins policies/vmadmins.hcl
+```
+vault policy write vmadmins policies/vmadmins.hcl
 ```
 ### Step 2: Associate the vmadmins policy with the LDAP Group or user pass
 LDAP Authentication
-```vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
+```
+vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
 ```
 User Name Password Authentication
-```vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
+```
+vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
 ```
 ### Step 3: Login as the User and Generate a Token
-
+```
 vault token create -period 24h -policy vmadmins
-
+```
 ### Step 4: Enable the KV secrets engine
 A version 2 K/V secrets backend mounted at `systemcreds`
 
 ### Step 5: Run the script
-```powershell  .\esxi_password_update.ps1
-   -vcenter
-   -vaultserver
-   -token
+```
+powershell  .\esxi_password_update.ps1 -vcenter {vcenter} -vaultserver {vault server -vaulttoken {vaulttoken}
 ```
 Example:
-```.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -token
+```
+.\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -vaulttoken
 ```
 ![Automated - Read and Update Vault](images/read_update_vault.gif)
 
