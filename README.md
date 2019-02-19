@@ -34,13 +34,18 @@ Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_passwor
 ![Batch Update - PowerCLI](images/batch_update.gif)
 
 ## Automated - PowerCLI and HashiCorp Vault
-Automated PowerCLI, REST API to rotate passwords, unique password for all hosts, changed dynamically and still allows for manual revoke and updates
+* Discovery of ESXi hosts using PowerCLI
+* Pull root password for each ESXi host using Vault REST API
+* Generate unique passwords per host and update Vault
+* Version Passwords within Vault
 
 ## Prerequisites / Vault Setup
-* HashiCorp Vault cluster that is reachable from your server instances. (Inbound TCP port 8200 to Vault)
+* HashiCorp Vault cluster that is reachable via PowerCLI. (Inbound TCP port 8200 to Vault)
 
 ### Step 1: Configure Policies
-Create a vmadmins policy and upload the [vmadmins.hcl](policies/vmadmins.hcl) into the ACL policies within the Vault UI
+Create Vault policy for 'vmadmins' with ACL settings specifed via [vmadmins.hcl](policies/vmadmins.hcl) via the Vault UI
+
+*Picture?*
 
 Alternatively this can be done via the Vault CLI
 ```
@@ -56,14 +61,15 @@ If you are not using LDAP authentication withn Vault you can us an alternative a
 vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
 ```
 ### Step 3: Enable the KV secrets engine and store ESXi passwords per host
-A version 2 K/V secrets backend mounted at `systemcreds`
-Passwords are stored under the Vault path: /systemcreds/esxihosts/$vmhost
+* A version 2 K/V secrets backend mounted at `systemcreds`
+* Passwords are stored under the Vault path: /systemcreds/esxihosts/$vmhost
 
 Ex.
 ![ESXi passwords stored in Vault](images/esxi_vault.gif)
 
 ### Step 4: Login as the User and Generate a Token
 Login to the UI copy the token.
+
 ![Copy Vault Token](images/copy_token.jpg)
 
 Alternatively this can be done via the Vault CLI
