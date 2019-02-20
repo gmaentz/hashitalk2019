@@ -9,7 +9,7 @@ In this talk we will showcase the evolution of managing VMware credentials.  The
 * How VMware Admins can utilize existing tools like PowerCLI with HashiCorp Vault. 
 * Ways you can use HashiCorp Vault to manage, control and rotate VMWare credentials in an automated manner.
 
-## PowerCLI and HashiCorp Vault
+## VMware, PowerCLI and HashiCorp Vault
 
 ![Managing VMware Environments with HashiCorp Vault](images/vault_pluggable_architecture.jpg)
 
@@ -81,7 +81,7 @@ Example:
 ![Automated - Read and Update Vault](images/read_vault.gif)
 
 
-##Manual and Semi-Automated Alternatives:
+## Manual and Semi-Automated Alternatives:
 Below are some of the manual and partially automated options for rotating ESXi root passwords:
 
 ### Manual password updates with Web Interface and/or PowerCLI
