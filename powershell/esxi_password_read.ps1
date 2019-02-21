@@ -1,5 +1,5 @@
 # Read password for ESXi accounts stored in Vault.
-# Pass the vcenter, vaultserver adn vault token as parameters.
+# Pass the vcenter, vaultserver and vault token as parameters.
 #
 # Workflow:  
 #   a. Login into vCenter and list all ESXi hosts

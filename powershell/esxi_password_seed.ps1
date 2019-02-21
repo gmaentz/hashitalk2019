@@ -1,5 +1,6 @@
 # Performs a discovery of the VMware hosts within vCenter and 
 # saves them to Vault with with a supplied password.
+# Pass the vcenter, vaultserver, host password and vault token as parameters.
 #
 # Workflow:  
 #   a. Login into vCenter and list all ESXi hosts
