@@ -1,5 +1,9 @@
-# Script for reading password for ESXi accounts.
-# Pass the VAULT_TOKEN, VAULT_ADDR and VCENTER_ADDR as parameters.
+# Read password for ESXi accounts stored in Vault.
+# Pass the vcenter, vaultserver adn vault token as parameters.
+#
+# Workflow:  
+#   a. Login into vCenter and list all ESXi hosts
+#   b. For each host read the current password from Vault.
 
 param (
     [Parameter(Mandatory=$true)][string]$vcenter,

@@ -1,6 +1,13 @@
 # Script for rotating root passwords on ESXi accounts.
-# Random password is set for each host.
-# Password is stored in Vault
+# Random password is set for each host and stored in Vault
+# Pass the vcenter, vaultserver, and vault token as parameters.
+#
+# Workflow:  
+#   a. Login into vCenter and list all ESXi hosts
+#   b. For each host read the current password from Vault.
+#   c. Generate a new random password for each host.
+#   d. Update Vault with the new password.
+#   e. Update the ESXi host with the new password.
 
 param (
     [Parameter(Mandatory=$true)][string]$vcenter,
@@ -24,8 +31,7 @@ foreach ($vmhost in $hosts) {
     $jsondata = Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost
     if($?) {
         $currentpw = $jsondata.data.data.password
-        write-host "Root password for $vmhost is $currentpw"
-
+        
         # Random Password Generator - (Length,Special Characters)
         $newpw = [system.web.security.membership]::GeneratePassword(10,2)
 

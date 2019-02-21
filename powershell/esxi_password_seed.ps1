@@ -1,5 +1,9 @@
-# Script for seeding Vault with ESXi credentials.
-# Password is stored in Vault
+# Performs a discovery of the VMware hosts within vCenter and 
+# saves them to Vault with with a supplied password.
+#
+# Workflow:  
+#   a. Login into vCenter and list all ESXi hosts
+#   b. For each host set a specified password into Vault in the sytemcreds/esxihosts
 
 param (
     [Parameter(Mandatory=$true)][string]$vcenter,
@@ -25,7 +29,7 @@ foreach ($vmhost in $hosts) {
     $JSON="{ `"options`": { `"max_versions`": 10 }, `"data`": { `"password`": `"$hostpwd`" } }"
     Invoke-RestMethod -Headers @{"X-Vault-Token" = $vaulttoken} -Method POST -Body $JSON -Uri $vaultserver/v1/systemcreds/data/esxihosts/$vmhost 
     if($?) {
-        Write-Output "Error: Root password was stored in Vault but *not* changed on the ESXi host - $vmhost"
+        Write-Output "Root password was stored in Vault for ESXi host - $vmhost"
             }
         else {
             Write-Output "Error saving new password to Vault."
