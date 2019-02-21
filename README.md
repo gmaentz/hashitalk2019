@@ -38,7 +38,7 @@ vault write "auth/ldap/groups/VMware Admins" policies=vmadmins
 ```
 If you are not using LDAP authentication withn Vault you can us an alternative authentication method.  Below is an example associating username password authentication to the Vault vmadmins policy
 ```
-vault write auth/userpass/users/vmadmin password=VMware1! policies=vmadmins
+vault write auth/userpass/users/vmadmin password={Your_Password} policies=vmadmins
 ```
 ### Step 3: Enable the KV secrets engine and store ESXi passwords per host
 * A version 2 K/V secrets backend mounted at `systemcreds`

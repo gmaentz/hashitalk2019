@@ -54,13 +54,3 @@ foreach ($vmhost in $hosts) {
          Write-Output "Error reading password from Vault. Be sure a password is saved under the Vault path: /systemcreds/esxihosts/$vmhost"
      }
 }
-
-# Renew our token before we do anything else.
-# Invoke-RestMethod -Headers @{"X-Vault-Token" = ${VAULT_TOKEN}} -Method POST -Uri ${VAULT_ADDR}/v1/auth/token/renew-self
-# if(-Not $?)
-# {
-#    Write-Output "Error renewing Vault token lease."
-# }
-
-# Convert into a SecureString
-# $SECUREPASS = ConvertTo-SecureString $NEWPASS -AsPlainText -Force
