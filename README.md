@@ -53,7 +53,10 @@ Utilize [esxi_password_seed.ps1](powershell/esxi_password_seed.ps1) to connect t
 ```powershell
 .\esxi_password_seed.ps1 -vcenter {vcenter} -vaultserver {vault server} -hostpwd {PasswordtoSeed} -vaulttoken {vaulttoken}
 ```
+Example:
+```powershell
 .\esxi_password_seed.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -hostpwd VMware1!
+```
 
 ### Step 4: Login as the User and Generate a Token
 Login to the UI copy the token.
@@ -124,8 +127,10 @@ Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_passwor
 ```powershell
 .\esxi_password_batch_update.ps1 -vcenter {vcenter} -currentpwd {CurrentHostPassword} -newpwd {NewPassword to set}
 ```
+Example:
+```powershell
 .\esxi_password_batch_update.ps1 -vcenter vc.lab.local -currentpwd VMware1! -newpwd NewP@ssw0rd
-
+```
 ***
 
 
