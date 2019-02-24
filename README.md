@@ -47,7 +47,7 @@ vault write auth/userpass/users/vmadmin password={Your_Password} policies=vmadmi
 Ex.
 ![ESXi passwords stored in Vault](images/esxi_vault.gif)
 
-####Seed Vault with vCenter Discovery
+#### Seed Vault with vCenter Discovery
 Utilize [esxi_password_seed.ps1](powershell/esxi_password_seed.ps1) to connect to vCenter, loop through all hosts write them, along with the specified password to Vault.
 
 ```powershell
@@ -55,7 +55,7 @@ Utilize [esxi_password_seed.ps1](powershell/esxi_password_seed.ps1) to connect t
 ```
 Example:
 ```powershell
-.\esxi_password_seed.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -hostpwd VMware1!
+.\esxi_password_seed.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -hostpwd NewP@ssw0rd
 ```
 
 ### Step 4: Login as the User and Generate a Token
