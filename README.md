@@ -47,6 +47,14 @@ vault write auth/userpass/users/vmadmin password={Your_Password} policies=vmadmi
 Ex.
 ![ESXi passwords stored in Vault](images/esxi_vault.gif)
 
+####Seed Vault with vCenter Discovery
+Utilize [esxi_password_seed.ps1](powershell/esxi_password_seed.ps1) to connect to vCenter, loop through all hosts write them, along with the specified password to Vault.
+
+```powershell
+.\esxi_password_seed.ps1 -vcenter {vcenter} -vaultserver {vault server} -hostpwd {PasswordtoSeed} -vaulttoken {vaulttoken}
+```
+.\esxi_password_seed.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200 -hostpwd VMware1!
+
 ### Step 4: Login as the User and Generate a Token
 Login to the UI copy the token.
 
@@ -56,7 +64,6 @@ Alternatively this can be done via the Vault CLI
 ```
 vault token create -period 24h -policy vmadmins
 ```
-
 ### Step 5: Update ESXi passwords using PowerCLI and Vault
 Utilize [esxi_password_update.ps1](powershell/esxi_password_update.ps1) to read the existing root password from Vault, connect to vCenter, loop through all hosts connected with vCenter, generate a random password and set it for each host, and record the new password with Vault - keeping a versioned history.
 
@@ -68,7 +75,6 @@ Example:
 .\esxi_password_update.ps1 -vcenter vc.lab.local -vaultserver https://vault.lab.local:8200
 ```
 ![Automated - Rotate ESXi Host Passwords and Update Vault](images/update_vault.gif)
-
 ***
 
 ### Optional: Run the read password script to list root passwords stored in Vault
@@ -114,6 +120,11 @@ Changing the ESXi root password of all hosts via PowerCLI.
 Utilize [esxi_password_batch_update.ps1 PowerCLI script](powershell/esxi_password_batch_update.ps1) to perform a batch update against all hosts within vCenter.
 
 ![Batch Update - PowerCLI](images/batch_update.gif)
+
+```powershell
+.\esxi_password_batch_update.ps1 -vcenter {vcenter} -currentpwd {CurrentHostPassword} -newpwd {NewPassword to set}
+```
+.\esxi_password_batch_update.ps1 -vcenter vc.lab.local -currentpwd VMware1! -newpwd NewP@ssw0rd
 
 ***
 
